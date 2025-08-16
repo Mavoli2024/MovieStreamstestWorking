@@ -64,6 +64,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(movies);
   });
 
+  // Auth page route - handle both /auth and /auth.html
+  app.get('/auth', (req, res) => {
+    res.sendFile('auth.html', { root: process.cwd() });
+  });
+
   // Public routes
   app.get('/api/status', (req, res) => {
     res.json({ 

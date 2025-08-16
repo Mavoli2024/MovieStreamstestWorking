@@ -1,6 +1,6 @@
 import express from "express";
 import path from "path";
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "./routes.js";
 
 const app = express();
 
@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..')));
 
 // Register API routes and authentication
-registerRoutes(app).then((server) => {
+registerRoutes(app).then((server: any) => {
   const port = process.env.PORT || 5000;
   
   server.listen(Number(port), '0.0.0.0', () => {
@@ -20,7 +20,7 @@ registerRoutes(app).then((server) => {
     console.log(`🔐 Authentication system ready`);
     console.log(`🎬 Visit http://0.0.0.0:${port} to access your streaming app`);
   });
-}).catch((error) => {
+}).catch((error: any) => {
   console.error("Failed to start server:", error);
   process.exit(1);
 });
