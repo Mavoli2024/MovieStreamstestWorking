@@ -115,8 +115,8 @@ class BunnyCDN {
     updateConfigurationStatus() {
         this.isConfigured = !!this.baseUrl;
         
-        // Update debug panel if available
-        if (window.debugPanel) {
+        // Update debug panel if available (with safety check)
+        if (window.debugPanel && typeof window.debugPanel.updateCdnStatus === 'function') {
             window.debugPanel.updateCdnStatus({
                 baseUrl: this.baseUrl || 'Not configured',
                 authentication: this.token ? 'Token configured' : 'No authentication',
