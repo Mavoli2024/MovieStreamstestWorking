@@ -1,0 +1,270 @@
+/* Main Styles */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Video Container */
+.video-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.video-player {
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+    display: block;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    z-index: 10;
+}
+
+.loading-overlay.hidden {
+    display: none;
+}
+
+/* Error Overlay */
+.error-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+}
+
+.error-content {
+    text-align: center;
+    color: white;
+    padding: 2rem;
+    max-width: 400px;
+}
+
+.error-icon {
+    width: 48px;
+    height: 48px;
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+.error-details {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.875rem;
+    text-align: left;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* Movies List */
+.movies-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.movie-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.movie-item:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+    transform: translateY(-1px);
+}
+
+.movie-item.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.movie-poster {
+    width: 40px;
+    height: 40px;
+    background: #6c757d;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    color: white;
+}
+
+.movie-item.active .movie-poster {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.movie-details h6 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.movie-details small {
+    font-size: 0.75rem;
+}
+
+/* Connection Status */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+.status-unknown {
+    background-color: #6c757d;
+}
+
+.status-success {
+    background-color: #28a745;
+}
+
+.status-error {
+    background-color: #dc3545;
+}
+
+.status-warning {
+    background-color: #ffc107;
+}
+
+/* Debug Panel */
+.debug-logs {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.75rem;
+    height: 200px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+.debug-log-entry {
+    margin-bottom: 0.25rem;
+    padding: 0.25rem;
+    border-left: 3px solid transparent;
+}
+
+.debug-log-entry.info {
+    border-left-color: #17a2b8;
+}
+
+.debug-log-entry.warn {
+    border-left-color: #ffc107;
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.debug-log-entry.error {
+    border-left-color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.debug-log-entry .timestamp {
+    color: #6c757d;
+    margin-right: 0.5rem;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding: 0.25rem;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.status-item strong {
+    flex-shrink: 0;
+    margin-right: 1rem;
+}
+
+.status-item span {
+    font-family: monospace;
+    font-size: 0.875rem;
+    word-break: break-all;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .video-player {
+        min-height: 250px;
+    }
+    
+    .error-content {
+        padding: 1rem;
+    }
+    
+    .movie-item {
+        padding: 0.5rem;
+    }
+    
+    .movie-poster {
+        width: 32px;
+        height: 32px;
+        margin-right: 0.5rem;
+    }
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}

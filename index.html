@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies Streaming App - Bunny CDN</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="row bg-dark text-white py-3 mb-4">
+            <div class="col">
+                <h1 class="h3 mb-0">
+                    <i data-feather="film" class="me-2"></i>
+                    Movies Streaming App
+                </h1>
+                <small class="text-muted">Powered by Bunny CDN</small>
+            </div>
+            <div class="col-auto">
+                <button id="debugToggle" class="btn btn-outline-light btn-sm">
+                    <i data-feather="settings" class="me-1"></i>
+                    Debug Panel
+                </button>
+            </div>
+        </header>
+
+        <!-- Debug Panel -->
+        <div id="debugPanel" class="row mb-4" style="display: none;">
+            <div class="col">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i data-feather="bug" class="me-2"></i>
+                            Debug Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>CDN Configuration</h6>
+                                <div id="cdnStatus" class="mb-3">
+                                    <div class="status-item">
+                                        <strong>Base URL:</strong> <span id="baseUrlStatus">-</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <strong>Authentication:</strong> <span id="authStatus">-</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <strong>CORS:</strong> <span id="corsStatus">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Player Status</h6>
+                                <div id="playerStatus" class="mb-3">
+                                    <div class="status-item">
+                                        <strong>Current Source:</strong> <span id="currentSource">-</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <strong>Video State:</strong> <span id="videoState">-</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <strong>Network State:</strong> <span id="networkState">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <h6>Console Logs</h6>
+                                <div id="debugLogs" class="debug-logs">
+                                    <!-- Debug logs will appear here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row">
+            <!-- Video Player Section -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div id="videoContainer" class="video-container">
+                            <video 
+                                id="moviePlayer" 
+                                class="video-player"
+                                controls
+                                preload="metadata"
+                                poster=""
+                            >
+                                <p>Your browser doesn't support HTML5 video.</p>
+                            </video>
+                            
+                            <!-- Loading Overlay -->
+                            <div id="loadingOverlay" class="loading-overlay">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading video...</p>
+                            </div>
+
+                            <!-- Error Overlay -->
+                            <div id="errorOverlay" class="error-overlay" style="display: none;">
+                                <div class="error-content">
+                                    <i data-feather="alert-triangle" class="error-icon"></i>
+                                    <h4>Video Playback Error</h4>
+                                    <p id="errorMessage">An error occurred while trying to play the video.</p>
+                                    <div id="errorDetails" class="error-details mt-3"></div>
+                                    <button id="retryButton" class="btn btn-primary mt-3">
+                                        <i data-feather="refresh-cw" class="me-1"></i>
+                                        Retry
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Video Info -->
+                        <div id="videoInfo" class="mt-3" style="display: none;">
+                            <h5 id="videoTitle">Movie Title</h5>
+                            <p id="videoDescription" class="text-muted">Movie description will appear here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Movie Selection Sidebar -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-feather="list" class="me-2"></i>
+                            Available Movies
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- CDN Configuration -->
+                        <div class="mb-3">
+                            <label for="cdnBaseUrl" class="form-label">Bunny CDN Base URL</label>
+                            <input 
+                                type="text" 
+                                id="cdnBaseUrl" 
+                                class="form-control form-control-sm" 
+                                placeholder="https://your-zone.b-cdn.net"
+                                value=""
+                            >
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cdnToken" class="form-label">CDN Token (Optional)</label>
+                            <input 
+                                type="password" 
+                                id="cdnToken" 
+                                class="form-control form-control-sm" 
+                                placeholder="Authentication token"
+                            >
+                        </div>
+
+                        <button id="updateCdnConfig" class="btn btn-primary btn-sm mb-3 w-100">
+                            Update CDN Configuration
+                        </button>
+
+                        <hr>
+
+                        <!-- Video URL Input -->
+                        <div class="mb-3">
+                            <label for="customVideoUrl" class="form-label">Custom Video URL</label>
+                            <input 
+                                type="text" 
+                                id="customVideoUrl" 
+                                class="form-control form-control-sm" 
+                                placeholder="Direct video URL or filename"
+                            >
+                            <div class="form-text">
+                                Enter a complete URL or just the filename (will use CDN base URL)
+                            </div>
+                        </div>
+
+                        <button id="loadCustomVideo" class="btn btn-success btn-sm w-100 mb-3">
+                            <i data-feather="play" class="me-1"></i>
+                            Load Video
+                        </button>
+
+                        <hr>
+
+                        <!-- Sample Videos (for testing) -->
+                        <h6>Test Videos</h6>
+                        <div id="moviesList" class="movies-list">
+                            <div class="movie-item" data-filename="sample-video.mp4">
+                                <div class="movie-poster">
+                                    <i data-feather="film"></i>
+                                </div>
+                                <div class="movie-details">
+                                    <h6>Sample Video</h6>
+                                    <small class="text-muted">MP4 Format</small>
+                                </div>
+                            </div>
+                            
+                            <div class="movie-item" data-filename="test-stream.m3u8">
+                                <div class="movie-poster">
+                                    <i data-feather="video"></i>
+                                </div>
+                                <div class="movie-details">
+                                    <h6>HLS Stream</h6>
+                                    <small class="text-muted">M3U8 Format</small>
+                                </div>
+                            </div>
+                            
+                            <div class="movie-item" data-filename="demo-content.webm">
+                                <div class="movie-poster">
+                                    <i data-feather="monitor"></i>
+                                </div>
+                                <div class="movie-details">
+                                    <h6>WebM Video</h6>
+                                    <small class="text-muted">WebM Format</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connection Status -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i data-feather="activity" class="me-2"></i>
+                            Connection Status
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="connectionStatus">
+                            <div class="status-indicator">
+                                <span id="cdnStatusIndicator" class="status-dot status-unknown"></span>
+                                <span>CDN Connection: <span id="cdnStatusText">Not tested</span></span>
+                            </div>
+                            <div class="status-indicator">
+                                <span id="playerStatusIndicator" class="status-dot status-unknown"></span>
+                                <span>Player Status: <span id="playerStatusText">Ready</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="bunny-cdn.js"></script>
+    <script src="player.js"></script>
+    <script src="debug-panel.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
