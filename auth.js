@@ -73,13 +73,17 @@ class AuthSystem {
             if (this.isAuthenticated) {
                 // Show logout option
                 button.textContent = 'Sign Out';
-                button.href = '/api/logout';
+                button.href = '#';
                 button.classList.remove('btn-primary', 'btn-outline-light');
                 button.classList.add('btn-outline-danger');
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.logout();
+                });
             } else {
                 // Show login option
                 button.textContent = button.classList.contains('btn-lg') ? 'Sign In & Start Watching' : 'Sign In';
-                button.href = '/api/login';
+                button.href = '/auth.html';
             }
         });
     }
@@ -160,7 +164,7 @@ class AuthSystem {
             <div class="auth-overlay-content">
                 <i data-feather="lock" class="auth-icon"></i>
                 <p>Sign in to watch</p>
-                <a href="/api/login" class="btn btn-primary btn-sm">Sign In</a>
+                <a href="/auth.html" class="btn btn-primary btn-sm">Sign In</a>
             </div>
         `;
 
@@ -208,7 +212,7 @@ class AuthSystem {
             if (!this.isAuthenticated) {
                 e.preventDefault();
                 e.stopPropagation();
-                window.location.href = '/api/login';
+                window.location.href = '/auth.html';
             }
         });
 
@@ -363,7 +367,32 @@ class AuthSystem {
      */
     handleUnauthorized() {
         this.log('warn', 'Unauthorized access detected, redirecting to login');
-        window.location.href = '/api/login';
+        window.location.href = '/auth.html';
+    }
+
+    /**
+     * Logout user
+     */
+    async logout() {
+        try {
+            const response = await fetch('/api/logout', {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+            
+            if (response.ok) {
+                this.currentUser = null;
+                this.isAuthenticated = false;
+                this.updateUI();
+                this.log('info', 'User logged out successfully');
+                // Refresh the page to reset everything
+                window.location.reload();
+            } else {
+                throw new Error('Logout failed');
+            }
+        } catch (error) {
+            this.log('error', 'Logout failed', error.message);
+        }
     }
 
     /**
