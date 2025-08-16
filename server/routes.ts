@@ -1,34 +1,18 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupClerkAuth, requireAuth } from "./clerkAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  setupClerkAuth(app);
+  // No auth middleware needed
 
-  // Auth routes
-  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
-    try {
-      // Clerk provides user data in req.auth
-      const clerkUser = req.auth.userId;
-      if (!clerkUser) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      // Return Clerk user info
-      res.json({ 
-        id: req.auth.userId,
-        authenticated: true 
-      });
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
+  // Auth routes (mock for now)
+  app.get('/api/auth/user', (req, res) => {
+    // Always return not authenticated for now
+    res.status(401).json({ message: "Not authenticated" });
   });
 
-  // Protected API routes
-  app.get("/api/movies", requireAuth, async (req, res) => {
+  // Movies API route (public for now)
+  app.get("/api/movies", async (req, res) => {
     // Return available movies for authenticated users
     const movies = [
       {
@@ -68,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/status', (req, res) => {
     res.json({ 
       status: 'ok', 
-      authenticated: !!(req as any).auth?.userId,
+      authenticated: false,
       timestamp: new Date().toISOString()
     });
   });
