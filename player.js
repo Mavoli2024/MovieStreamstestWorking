@@ -351,7 +351,7 @@ class VideoPlayer {
      * Update player status in debug panel
      */
     updatePlayerStatus(status) {
-        if (window.debugPanel) {
+        if (window.debugPanel && typeof window.debugPanel.updatePlayerStatus === 'function') {
             window.debugPanel.updatePlayerStatus({
                 currentSource: this.currentSource,
                 videoState: status,
@@ -472,7 +472,7 @@ class VideoPlayer {
      * Update debug information
      */
     updateDebugInfo() {
-        if (window.debugPanel) {
+        if (window.debugPanel && typeof window.debugPanel.updatePlayerStatus === 'function') {
             window.debugPanel.updatePlayerStatus({
                 currentSource: this.currentSource,
                 videoState: this.hasError ? 'error' : this.isLoading ? 'loading' : 'ready',
@@ -504,7 +504,7 @@ class VideoPlayer {
         }
 
         // Send to debug panel if available
-        if (window.debugPanel) {
+        if (window.debugPanel && typeof window.debugPanel.addLog === 'function') {
             window.debugPanel.addLog(logEntry);
         }
     }

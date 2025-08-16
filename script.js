@@ -487,7 +487,7 @@ class StreamingApp {
         this.showTemporaryMessage(message, 'error');
 
         // If debug panel is available, ensure it shows the error
-        if (window.debugPanel) {
+        if (window.debugPanel && typeof window.debugPanel.addLog === 'function') {
             window.debugPanel.addLog({
                 timestamp: new Date().toISOString(),
                 level: 'error',
@@ -532,7 +532,7 @@ class StreamingApp {
         }
 
         // Send to debug panel if available
-        if (window.debugPanel) {
+        if (window.debugPanel && typeof window.debugPanel.addLog === 'function') {
             window.debugPanel.addLog(logEntry);
         }
     }
