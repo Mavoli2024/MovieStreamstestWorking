@@ -1,20 +1,26 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupCustomAuth, isAuthenticated } from "./customAuth";
+import { setupClerkAuth, requireAuth } from "./clerkAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
-  setupCustomAuth(app);
+  setupClerkAuth(app);
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.id);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
+      // Clerk provides user data in req.auth
+      const clerkUser = req.auth.userId;
+      if (!clerkUser) {
+        return res.status(401).json({ message: "Unauthorized" });
       }
-      res.json(user);
+      
+      // Return Clerk user info
+      res.json({ 
+        id: req.auth.userId,
+        authenticated: true 
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -22,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Protected API routes
-  app.get("/api/movies", isAuthenticated, async (req, res) => {
+  app.get("/api/movies", requireAuth, async (req, res) => {
     // Return available movies for authenticated users
     const movies = [
       {
@@ -62,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/status', (req, res) => {
     res.json({ 
       status: 'ok', 
-      authenticated: (req as any).isAuthenticated(),
+      authenticated: !!(req as any).auth?.userId,
       timestamp: new Date().toISOString()
     });
   });

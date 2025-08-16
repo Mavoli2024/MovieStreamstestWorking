@@ -10,6 +10,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@clerk/backend": "^2.9.1",
+    "@clerk/clerk-js": "^5.85.0",
     "@neondatabase/serverless": "^1.0.1",
     "@stripe/react-stripe-js": "^3.9.0",
     "@stripe/stripe-js": "^7.8.0",
