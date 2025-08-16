@@ -22,5 +22,12 @@ registerRoutes(app).then((server: any) => {
   });
 }).catch((error: any) => {
   console.error("Failed to start server:", error);
-  process.exit(1);
+  console.error("Server will attempt to continue running...");
+  // Removed process.exit(1) to prevent early termination
+  // Instead, try to start a basic server
+  const port = process.env.PORT || 5000;
+  app.listen(Number(port), '0.0.0.0', () => {
+    console.log(`🚀 Fallback server running on port ${port}`);
+    console.log(`⚠️ Running in fallback mode due to initialization error`);
+  });
 });
