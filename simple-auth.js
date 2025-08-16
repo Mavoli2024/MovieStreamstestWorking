@@ -105,9 +105,15 @@ class SimpleAuthSystem {
      * Check if user is authenticated
      */
     async checkAuthStatus() {
+        this.isLoading = true;
         try {
+            // First try the protected auth endpoint
             const response = await fetch('/api/auth/user', {
-                credentials: 'same-origin'
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
             
             if (response.ok) {
@@ -119,7 +125,7 @@ class SimpleAuthSystem {
                 this.isAuthenticated = false;
                 this.log('info', 'User not authenticated');
             } else {
-                throw new Error(`Auth check failed: ${response.statusText}`);
+                throw new Error(`Auth check failed: ${response.status} ${response.statusText}`);
             }
         } catch (error) {
             this.log('error', 'Failed to check auth status', error.message);
@@ -278,6 +284,18 @@ class SimpleAuthSystem {
             
             // Make sure click handlers work
             card.style.cursor = 'pointer';
+            
+            // Remove any click event restrictions
+            const newCard = card.cloneNode(true);
+            card.parentNode.replaceChild(newCard, card);
+            
+            // Re-add the click handler for movie selection
+            newCard.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (window.streamingApp) {
+                    window.streamingApp.selectMovie(newCard);
+                }
+            });
         });
 
         this.log('info', 'All movies shown for authenticated user');
@@ -369,6 +387,9 @@ class SimpleAuthSystem {
                 const movies = await response.json();
                 this.displayMovies(movies);
                 this.log('info', 'Loaded authenticated movies', { count: movies.length });
+            } else if (response.status === 401) {
+                // User is not authenticated, show limited content
+                this.showLimitedMovies();
             } else {
                 // Show all default movies if API fails
                 this.showAllMovies();
