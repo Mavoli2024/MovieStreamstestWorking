@@ -162,6 +162,10 @@
             loginForm.style.display = 'none';
             registerForm.style.display = 'block';
             authAlert.classList.add('d-none');
+            // Update URL without refreshing page
+            const url = new URL(window.location);
+            url.searchParams.set('tab', 'register');
+            window.history.replaceState({}, '', url);
         });
 
         document.getElementById('showLogin').addEventListener('click', (e) => {
@@ -169,6 +173,10 @@
             registerForm.style.display = 'none';
             loginForm.style.display = 'block';
             authAlert.classList.add('d-none');
+            // Update URL without refreshing page
+            const url = new URL(window.location);
+            url.searchParams.set('tab', 'login');
+            window.history.replaceState({}, '', url);
         });
 
         // Handle login form submission
@@ -259,6 +267,22 @@
             }
         });
 
+        // Handle URL parameters to show correct form
+        function handleUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            
+            if (tab === 'register' || tab === 'signup') {
+                // Show registration form
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+            } else {
+                // Default to login form
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+            }
+        }
+
         // Check if user is already logged in
         async function checkAuthStatus() {
             try {
@@ -274,6 +298,8 @@
             }
         }
 
+        // Initialize page
+        handleUrlParams();
         checkAuthStatus();
     </script>
 </body>
