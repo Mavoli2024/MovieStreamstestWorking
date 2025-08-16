@@ -29,19 +29,30 @@ class StreamingApp {
      */
     initializeComponents() {
         try {
+            this.log('info', 'Starting component initialization...');
+            
             // Initialize Feather icons
             if (typeof feather !== 'undefined') {
                 feather.replace();
+                this.log('info', 'Feather icons initialized');
             }
 
             // Initialize video player
             this.initializeVideoPlayer();
+            this.log('info', 'Video player initialized');
             
             // Setup event listeners
             this.setupEventListeners();
+            this.log('info', 'Event listeners setup');
             
             // Load initial configuration
             this.loadInitialConfiguration();
+            this.log('info', 'Initial configuration loaded');
+            
+            // Test click functionality
+            setTimeout(() => {
+                this.testClickHandlers();
+            }, 1000);
             
             this.log('info', 'All components initialized successfully');
             
@@ -49,6 +60,19 @@ class StreamingApp {
             this.log('error', 'Failed to initialize components', error.message);
             this.showGlobalError('Failed to initialize application', error);
         }
+    }
+    
+    /**
+     * Test click handlers
+     */
+    testClickHandlers() {
+        const movieCards = document.querySelectorAll('.movie-card');
+        this.log('info', `Testing click handlers - found ${movieCards.length} cards`);
+        movieCards.forEach((card, index) => {
+            const filename = card.getAttribute('data-filename');
+            const title = card.querySelector('h6')?.textContent;
+            this.log('info', `Card ${index}: ${title} - ${filename}`);
+        });
     }
 
     /**
@@ -93,10 +117,14 @@ class StreamingApp {
             });
         }
 
-        // Movie selection from grid
+        // Movie selection from grid - with better error handling
         const movieCards = document.querySelectorAll('.movie-card');
-        movieCards.forEach(card => {
-            card.addEventListener('click', () => {
+        this.log('info', `Found ${movieCards.length} movie cards`);
+        movieCards.forEach((card, index) => {
+            this.log('info', `Setting up click handler for card ${index}`);
+            card.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.log('info', `Movie card ${index} clicked`);
                 this.selectMovie(card);
             });
         });
@@ -298,48 +326,66 @@ class StreamingApp {
      * Select movie from the grid
      */
     async selectMovie(movieCard) {
-        const filename = movieCard.getAttribute('data-filename');
-        const title = movieCard.querySelector('h6')?.textContent || 'Unknown Movie';
-        const description = movieCard.querySelector('small')?.textContent || '';
+        try {
+            const filename = movieCard.getAttribute('data-filename');
+            const title = movieCard.querySelector('h6')?.textContent || 'Unknown Movie';
+            const description = movieCard.querySelector('small')?.textContent || '';
 
-        if (!filename) {
-            this.log('error', 'Movie filename not found');
-            return;
-        }
+            this.log('info', 'Movie card clicked', { filename, title, description });
 
-        // Update UI selection
-        this.clearMovieSelection();
-        movieCard.classList.add('active');
+            if (!filename) {
+                this.log('error', 'Movie filename not found');
+                this.showTemporaryMessage('Error: No video URL found', 'error');
+                return;
+            }
 
-        // Use the filename directly since it's now a complete URL
-        let videoUrl = filename;
+            // Update UI selection
+            this.clearMovieSelection();
+            movieCard.classList.add('active');
 
-        // Load the movie
-        const success = await this.moviePlayer.loadVideo(videoUrl, {
-            title: title,
-            description: description
-        });
+            // Show loading message immediately
+            this.showTemporaryMessage(`Loading: ${title}`, 'info');
 
-        if (success) {
-            this.currentMovie = {
-                filename: videoUrl,
+            // Use the filename directly since it's now a complete URL
+            let videoUrl = filename;
+            this.log('info', 'Loading video URL', videoUrl);
+
+            // Load the movie
+            const success = await this.moviePlayer.loadVideo(videoUrl, {
                 title: title,
                 description: description
-            };
-            
-            this.showTemporaryMessage(`Loading: ${title}`, 'info');
-            
-            // Scroll to video player
-            document.getElementById('videoContainer').scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
             });
-        } else {
-            movieCard.classList.remove('active');
-            this.showTemporaryMessage(`Failed to load: ${title}`, 'error');
-        }
 
-        this.log('info', 'Movie selection', { filename: videoUrl, title, success });
+            if (success) {
+                this.currentMovie = {
+                    filename: videoUrl,
+                    title: title,
+                    description: description
+                };
+                
+                this.showTemporaryMessage(`Successfully loaded: ${title}`, 'success');
+                
+                // Scroll to video player
+                setTimeout(() => {
+                    const videoContainer = document.getElementById('videoContainer');
+                    if (videoContainer) {
+                        videoContainer.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                    }
+                }, 500);
+            } else {
+                movieCard.classList.remove('active');
+                this.showTemporaryMessage(`Failed to load: ${title}. Please try another video.`, 'error');
+            }
+
+            this.log('info', 'Movie selection completed', { filename: videoUrl, title, success });
+        } catch (error) {
+            this.log('error', 'Error in selectMovie', error.message);
+            this.showTemporaryMessage('Error loading video: ' + error.message, 'error');
+            movieCard.classList.remove('active');
+        }
     }
 
     /**
