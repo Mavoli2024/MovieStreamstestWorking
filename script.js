@@ -31,6 +31,11 @@ class StreamingApp {
         try {
             this.log('info', 'Starting component initialization...');
             
+            // Wait for authentication system to be ready
+            if (window.simpleAuthSystem) {
+                this.log('info', 'Authentication system detected, waiting for initialization');
+            }
+            
             // Initialize Feather icons
             if (typeof feather !== 'undefined') {
                 feather.replace();
@@ -49,10 +54,10 @@ class StreamingApp {
             this.loadInitialConfiguration();
             this.log('info', 'Initial configuration loaded');
             
-            // Test click functionality
+            // Test click functionality after auth system is ready
             setTimeout(() => {
                 this.testClickHandlers();
-            }, 1000);
+            }, 2000);
             
             this.log('info', 'All components initialized successfully');
             
@@ -336,6 +341,16 @@ class StreamingApp {
             if (!filename) {
                 this.log('error', 'Movie filename not found');
                 this.showTemporaryMessage('Error: No video URL found', 'error');
+                return;
+            }
+
+            // Check authentication status if auth system is available
+            if (window.simpleAuthSystem && !window.simpleAuthSystem.isAuthenticated) {
+                this.log('info', 'User not authenticated, redirecting to auth');
+                this.showTemporaryMessage('Please sign in to watch movies', 'warning');
+                setTimeout(() => {
+                    window.location.href = '/auth.html';
+                }, 1500);
                 return;
             }
 
