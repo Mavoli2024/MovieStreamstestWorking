@@ -269,26 +269,57 @@ class AuthSystem {
         const colDiv = document.createElement('div');
         colDiv.className = 'col-md-6 col-lg-4';
 
-        colDiv.innerHTML = `
-            <div class="movie-card" data-filename="${movie.url}">
-                <div class="movie-poster">
-                    <div class="placeholder-poster">
-                        <i data-feather="film" class="poster-icon"></i>
-                    </div>
-                    <div class="play-overlay">
-                        <i data-feather="play-circle" class="play-icon"></i>
-                    </div>
-                    <div class="movie-badge">Available</div>
-                </div>
-                <div class="movie-info">
-                    <h6>${movie.title}</h6>
-                    <small class="text-muted">${movie.description}</small>
-                </div>
-            </div>
-        `;
+        // Create movie card structure safely using DOM methods
+        const movieCard = document.createElement('div');
+        movieCard.className = 'movie-card';
+        movieCard.setAttribute('data-filename', movie.url); // Safe attribute setting
+
+        const posterDiv = document.createElement('div');
+        posterDiv.className = 'movie-poster';
+
+        const placeholderDiv = document.createElement('div');
+        placeholderDiv.className = 'placeholder-poster';
+
+        const filmIcon = document.createElement('i');
+        filmIcon.setAttribute('data-feather', 'film');
+        filmIcon.className = 'poster-icon';
+
+        const playOverlay = document.createElement('div');
+        playOverlay.className = 'play-overlay';
+
+        const playIcon = document.createElement('i');
+        playIcon.setAttribute('data-feather', 'play-circle');
+        playIcon.className = 'play-icon';
+
+        const badge = document.createElement('div');
+        badge.className = 'movie-badge';
+        badge.textContent = 'Available'; // Safe text setting
+
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'movie-info';
+
+        const title = document.createElement('h6');
+        title.textContent = movie.title; // Safe text setting - prevents XSS
+
+        const description = document.createElement('small');
+        description.className = 'text-muted';
+        description.textContent = movie.description; // Safe text setting - prevents XSS
+
+        // Assemble the DOM structure
+        placeholderDiv.appendChild(filmIcon);
+        playOverlay.appendChild(playIcon);
+        posterDiv.appendChild(placeholderDiv);
+        posterDiv.appendChild(playOverlay);
+        posterDiv.appendChild(badge);
+        
+        infoDiv.appendChild(title);
+        infoDiv.appendChild(description);
+        
+        movieCard.appendChild(posterDiv);
+        movieCard.appendChild(infoDiv);
+        colDiv.appendChild(movieCard);
 
         // Add click handler
-        const movieCard = colDiv.querySelector('.movie-card');
         movieCard.addEventListener('click', (e) => {
             e.preventDefault();
             if (window.streamingApp) {
