@@ -13,7 +13,10 @@ class SimpleAuthSystem {
     }
 
     async initialize() {
-        this.log('info', 'Simple authentication system initializing...');
+        this.log('info', 'Authentication system initializing...');
+        
+        // Check authentication status
+        await this.checkAuthStatus();
         
         // Set up click handlers for sign-in buttons
         this.setupSignInButtons();
@@ -21,7 +24,7 @@ class SimpleAuthSystem {
         // Initialize UI
         this.updateUI();
         
-        this.log('info', 'Simple authentication system ready');
+        this.log('info', 'Authentication system ready');
     }
 
     setupSignInButtons() {
@@ -30,7 +33,7 @@ class SimpleAuthSystem {
         if (signInBtn) {
             signInBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.showComingSoonMessage();
+                window.location.href = '/auth.html';
             });
         }
 
@@ -39,7 +42,7 @@ class SimpleAuthSystem {
         if (heroSignInBtn) {
             heroSignInBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.showComingSoonMessage();
+                window.location.href = '/auth.html';
             });
         }
     }
@@ -99,11 +102,108 @@ class SimpleAuthSystem {
     }
 
     /**
+     * Check if user is authenticated
+     */
+    async checkAuthStatus() {
+        try {
+            const response = await fetch('/api/auth/user', {
+                credentials: 'same-origin'
+            });
+            
+            if (response.ok) {
+                this.currentUser = await response.json();
+                this.isAuthenticated = true;
+                this.log('info', 'User authenticated', { email: this.currentUser.email });
+            } else if (response.status === 401) {
+                this.currentUser = null;
+                this.isAuthenticated = false;
+                this.log('info', 'User not authenticated');
+            } else {
+                throw new Error(`Auth check failed: ${response.statusText}`);
+            }
+        } catch (error) {
+            this.log('error', 'Failed to check auth status', error.message);
+            this.currentUser = null;
+            this.isAuthenticated = false;
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    /**
      * Update UI based on authentication state
      */
     updateUI() {
-        // For now, always show public content since auth is disabled
-        this.showPublicContent();
+        // Update sign-in buttons
+        this.updateSignInButtons();
+        
+        if (!this.isAuthenticated) {
+            this.showPublicContent();
+        } else {
+            this.showAuthenticatedContent();
+        }
+    }
+
+    /**
+     * Update sign-in buttons based on auth state
+     */
+    updateSignInButtons() {
+        const signInBtn = document.getElementById('signInBtn');
+        const heroSignInBtn = document.getElementById('heroSignInBtn');
+        
+        if (this.isAuthenticated && this.currentUser) {
+            // Show logout option
+            if (signInBtn) {
+                signInBtn.textContent = 'Sign Out';
+                signInBtn.classList.remove('btn-primary');
+                signInBtn.classList.add('btn-outline-danger');
+                signInBtn.onclick = (e) => {
+                    e.preventDefault();
+                    this.logout();
+                };
+            }
+            
+            if (heroSignInBtn) {
+                heroSignInBtn.style.display = 'none';
+            }
+        } else {
+            // Show sign-in option
+            if (signInBtn) {
+                signInBtn.textContent = 'Sign In';
+                signInBtn.classList.remove('btn-outline-danger');
+                signInBtn.classList.add('btn-primary');
+            }
+            
+            if (heroSignInBtn) {
+                heroSignInBtn.style.display = 'inline-block';
+                heroSignInBtn.textContent = 'Sign In & Start Watching';
+            }
+        }
+    }
+
+    /**
+     * Logout user
+     */
+    async logout() {
+        try {
+            const response = await fetch('/api/logout', {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+            
+            if (response.ok) {
+                this.currentUser = null;
+                this.isAuthenticated = false;
+                this.updateUI();
+                this.log('info', 'User logged out successfully');
+                // Refresh the page to reset everything
+                window.location.reload();
+            } else {
+                throw new Error('Logout failed');
+            }
+        } catch (error) {
+            this.log('error', 'Logout failed', error.message);
+        }
     }
 
     /**
@@ -116,14 +216,51 @@ class SimpleAuthSystem {
             heroSection.style.display = 'block';
         }
 
-        // Show all movies since auth is disabled
-        this.showAllMovies();
+        // Show limited movies for non-authenticated users
+        this.showLimitedMovies();
         
-        this.log('info', 'Showing public content (all movies available)');
+        this.log('info', 'Showing public content');
     }
 
     /**
-     * Show all movies (no authentication required)
+     * Show content for authenticated users
+     */
+    showAuthenticatedContent() {
+        // Hide hero section for authenticated users
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection) {
+            heroSection.style.display = 'none';
+        }
+
+        // Load full movie catalog
+        this.loadAuthenticatedMovies();
+        
+        this.log('info', 'Showing authenticated content');
+    }
+
+    /**
+     * Show limited movies for non-authenticated users
+     */
+    showLimitedMovies() {
+        const movieCards = document.querySelectorAll('.movie-card');
+        
+        movieCards.forEach((card, index) => {
+            if (index < 3) {
+                // Show first 3 movies as previews
+                card.style.display = 'block';
+                card.style.opacity = '1';
+                
+                // Add sign-in overlay
+                this.addSignInOverlay(card);
+            } else {
+                // Hide additional movies
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    /**
+     * Show all movies (authenticated users)
      */
     showAllMovies() {
         const movieCards = document.querySelectorAll('.movie-card');
@@ -143,17 +280,114 @@ class SimpleAuthSystem {
             card.style.cursor = 'pointer';
         });
 
-        this.log('info', 'All movies shown (no authentication required)');
+        this.log('info', 'All movies shown for authenticated user');
     }
 
     /**
-     * Make API request (no auth required for now)
+     * Add sign-in overlay to movie cards
+     */
+    addSignInOverlay(card) {
+        // Remove existing overlays
+        const existingOverlay = card.querySelector('.auth-overlay');
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
+
+        // Create sign-in overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'auth-overlay';
+        overlay.innerHTML = `
+            <div class="auth-overlay-content">
+                <i data-feather="lock" class="auth-icon"></i>
+                <p>Sign in to watch</p>
+                <button class="btn btn-primary btn-sm" onclick="window.location.href='/auth.html'">Sign In</button>
+            </div>
+        `;
+
+        // Style the overlay
+        overlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 8px;
+            z-index: 10;
+        `;
+
+        // Style overlay content
+        const overlayContent = overlay.querySelector('.auth-overlay-content');
+        if (overlayContent) {
+            overlayContent.style.cssText = `
+                text-align: center;
+                color: white;
+                padding: 20px;
+            `;
+        }
+
+        // Show overlay on hover
+        card.style.position = 'relative';
+        card.appendChild(overlay);
+
+        card.addEventListener('mouseenter', () => {
+            overlay.style.opacity = '1';
+        });
+
+        card.addEventListener('mouseleave', () => {
+            overlay.style.opacity = '0';
+        });
+
+        // Prevent clicking on movie if not authenticated
+        card.addEventListener('click', (e) => {
+            if (!this.isAuthenticated) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = '/auth.html';
+            }
+        });
+
+        // Re-initialize feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+    }
+
+    /**
+     * Load movies for authenticated users
+     */
+    async loadAuthenticatedMovies() {
+        try {
+            const response = await this.apiRequest('/api/movies');
+            
+            if (response.ok) {
+                const movies = await response.json();
+                this.displayMovies(movies);
+                this.log('info', 'Loaded authenticated movies', { count: movies.length });
+            } else {
+                // Show all default movies if API fails
+                this.showAllMovies();
+            }
+        } catch (error) {
+            this.log('error', 'Failed to load authenticated movies', error.message);
+            this.showAllMovies();
+        }
+    }
+
+    /**
+     * Make authenticated API request
      */
     async apiRequest(url, options = {}) {
         const defaultOptions = {
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'same-origin',
         };
 
         const requestOptions = {
@@ -167,11 +401,26 @@ class SimpleAuthSystem {
 
         try {
             const response = await fetch(url, requestOptions);
+            
+            if (response.status === 401) {
+                // Unauthorized - redirect to auth page
+                this.handleUnauthorized();
+                throw new Error('Unauthorized');
+            }
+
             return response;
         } catch (error) {
             this.log('error', 'API request failed', { url, error: error.message });
             throw error;
         }
+    }
+
+    /**
+     * Handle unauthorized access
+     */
+    handleUnauthorized() {
+        this.log('warn', 'Unauthorized access detected, redirecting to auth');
+        window.location.href = '/auth.html';
     }
 
     /**

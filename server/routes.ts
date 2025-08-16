@@ -1,18 +1,29 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, requireAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // No auth middleware needed
+  // Setup authentication middleware
+  setupAuth(app);
 
-  // Auth routes (mock for now)
-  app.get('/api/auth/user', (req, res) => {
-    // Always return not authenticated for now
-    res.status(401).json({ message: "Not authenticated" });
+  // Auth routes
+  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
   });
 
-  // Movies API route (public for now)
-  app.get("/api/movies", async (req, res) => {
+  // Movies API route (protected)
+  app.get("/api/movies", requireAuth, async (req, res) => {
     // Return available movies for authenticated users
     const movies = [
       {
@@ -52,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/status', (req, res) => {
     res.json({ 
       status: 'ok', 
-      authenticated: false,
+      authenticated: !!(req as any).isAuthenticated && (req as any).isAuthenticated(),
       timestamp: new Date().toISOString()
     });
   });
