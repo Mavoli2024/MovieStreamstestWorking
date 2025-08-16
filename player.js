@@ -135,7 +135,27 @@ class VideoPlayer {
 
         // Error events
         this.video.addEventListener('error', (event) => {
-            this.handleVideoError(event);
+            // Add more detailed error handling
+            let errorMessage = 'Video playback error';
+            if (this.video.error) {
+                switch (this.video.error.code) {
+                    case 1:
+                        errorMessage = 'Video loading was aborted';
+                        break;
+                    case 2:
+                        errorMessage = 'Network error - please check your connection';
+                        break;
+                    case 3:
+                        errorMessage = 'Video format not supported by your browser';
+                        break;
+                    case 4:
+                        errorMessage = 'Video source not found or not accessible';
+                        break;
+                    default:
+                        errorMessage = 'Unknown video error occurred';
+                }
+            }
+            this.handleVideoError(event, errorMessage);
         });
 
         this.video.addEventListener('abort', () => {
@@ -161,9 +181,14 @@ class VideoPlayer {
         // Reset state
         this.hasError = false;
         this.retryCount = 0;
+        this.setLoadingState(true);
         
-        // Construct full URL using Bunny CDN
-        const videoUrl = window.bunnyCDN.constructVideoUrl(source);
+        // Use source directly if it's already a full URL
+        let videoUrl = source;
+        if (!source.startsWith('http')) {
+            // Construct full URL using Bunny CDN
+            videoUrl = window.bunnyCDN.constructVideoUrl(source);
+        }
         
         if (!videoUrl) {
             this.handleVideoError(null, 'Invalid video source or CDN configuration');
@@ -173,24 +198,32 @@ class VideoPlayer {
         this.currentSource = videoUrl;
         
         try {
-            // Test CDN connection first
-            this.setLoadingState(true);
-            const connectionTest = await window.bunnyCDN.testConnection(videoUrl);
-            
-            if (!connectionTest.success) {
-                throw new Error(`CDN connection failed: ${connectionTest.error}`);
-            }
-
             // Update video info if metadata provided
             this.updateVideoInfo(metadata);
 
-            // Set video source with optimized URL
-            const optimizedUrl = window.bunnyCDN.getOptimizedUrl(source, {
-                quality: 'auto',
-                format: 'auto'
+            // Set video attributes for better compatibility
+            this.video.crossOrigin = 'anonymous';
+            this.video.preload = 'metadata';
+            
+            // Add additional attributes for mobile and CORS
+            this.video.setAttribute('playsinline', '');
+            this.video.setAttribute('webkit-playsinline', '');
+            
+            // Try to handle CORS gracefully
+            this.video.addEventListener('loadstart', () => {
+                this.log('info', 'Video load started for URL', videoUrl);
             });
-
-            this.video.src = optimizedUrl || videoUrl;
+            
+            this.video.addEventListener('error', (e) => {
+                this.log('error', 'Video error event', {
+                    error: this.video.error,
+                    networkState: this.video.networkState,
+                    readyState: this.video.readyState
+                });
+            });
+            
+            // Set video source directly
+            this.video.src = videoUrl;
             this.video.load();
 
             this.log('info', 'Video source set', {

@@ -152,10 +152,8 @@ class StreamingApp {
             cdnBaseUrlInput.value = madifaCdnUrl;
         }
 
-        // Test initial CDN connection
-        setTimeout(() => {
-            this.testCdnConnection();
-        }, 1000);
+        // Skip automatic CDN connection test to avoid CORS errors
+        // Connection will be tested when user plays a video
 
         this.log('info', 'Madifa CDN configuration loaded automatically');
     }
@@ -261,7 +259,7 @@ class StreamingApp {
                 // It's a path like 'folder/file.mp4'
                 videoUrl = `https://vz-685277f9-aa1.b-cdn.net/${videoUrl}`;
             } else {
-                // It's just a filename
+                // It's just a filename - try common video formats
                 videoUrl = `https://vz-685277f9-aa1.b-cdn.net/${videoUrl}`;
             }
         }
@@ -313,14 +311,8 @@ class StreamingApp {
         this.clearMovieSelection();
         movieCard.classList.add('active');
 
-        // Construct full URL for Madifa CDN videos
+        // Use the filename directly since it's now a complete URL
         let videoUrl = filename;
-        if (!filename.startsWith('http')) {
-            // For Madifa CDN videos, construct the full URL
-            if (filename.includes('vz-685277f9-aa1.b-cdn.net')) {
-                videoUrl = `https://${filename}`;
-            }
-        }
 
         // Load the movie
         const success = await this.moviePlayer.loadVideo(videoUrl, {
