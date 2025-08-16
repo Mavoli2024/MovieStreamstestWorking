@@ -327,7 +327,7 @@ class BunnyCDN {
         }
 
         // Send to debug panel if available
-        if (window.debugPanel) {
+        if (window.debugPanel && typeof window.debugPanel.addLog === 'function') {
             window.debugPanel.addLog(logEntry);
         }
 
