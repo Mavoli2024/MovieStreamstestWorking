@@ -93,13 +93,16 @@ class StreamingApp {
             });
         }
 
-        // Movie selection from list
-        const movieItems = document.querySelectorAll('.movie-item');
-        movieItems.forEach(item => {
-            item.addEventListener('click', () => {
-                this.selectMovie(item);
+        // Movie selection from grid
+        const movieCards = document.querySelectorAll('.movie-card');
+        movieCards.forEach(card => {
+            card.addEventListener('click', () => {
+                this.selectMovie(card);
             });
         });
+
+        // Player controls
+        this.setupPlayerControls();
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (event) => {
@@ -130,28 +133,31 @@ class StreamingApp {
      * Load initial configuration
      */
     loadInitialConfiguration() {
+        // Auto-configure Madifa CDN
+        const madifaCdnUrl = 'https://vz-685277f9-aa1.b-cdn.net';
+        
+        // Update CDN configuration
+        if (window.bunnyCDN) {
+            window.bunnyCDN.updateConfiguration({
+                baseUrl: madifaCdnUrl,
+                token: '' // No token needed for public videos
+            });
+        }
+        
         // Load CDN configuration into UI
         const cdnBaseUrlInput = document.getElementById('cdnBaseUrl');
         const cdnTokenInput = document.getElementById('cdnToken');
 
-        if (window.bunnyCDN) {
-            if (cdnBaseUrlInput && window.bunnyCDN.baseUrl) {
-                cdnBaseUrlInput.value = window.bunnyCDN.baseUrl;
-            }
-            
-            if (cdnTokenInput && window.bunnyCDN.token) {
-                cdnTokenInput.value = window.bunnyCDN.token;
-            }
+        if (cdnBaseUrlInput) {
+            cdnBaseUrlInput.value = madifaCdnUrl;
         }
 
-        // Test initial CDN connection if configured
-        if (window.bunnyCDN && window.bunnyCDN.isConfigured) {
-            setTimeout(() => {
-                this.testCdnConnection();
-            }, 1000);
-        }
+        // Test initial CDN connection
+        setTimeout(() => {
+            this.testCdnConnection();
+        }, 1000);
 
-        this.log('info', 'Initial configuration loaded');
+        this.log('info', 'Madifa CDN configuration loaded automatically');
     }
 
     /**
@@ -242,11 +248,22 @@ class StreamingApp {
             return;
         }
 
-        const videoUrl = customVideoInput.value.trim();
+        let videoUrl = customVideoInput.value.trim();
         
         if (!videoUrl) {
             this.showTemporaryMessage('Please enter a video URL or filename', 'warning');
             return;
+        }
+
+        // If it's just a filename, construct full URL
+        if (!videoUrl.startsWith('http')) {
+            if (videoUrl.includes('/')) {
+                // It's a path like 'folder/file.mp4'
+                videoUrl = `https://vz-685277f9-aa1.b-cdn.net/${videoUrl}`;
+            } else {
+                // It's just a filename
+                videoUrl = `https://vz-685277f9-aa1.b-cdn.net/${videoUrl}`;
+            }
         }
 
         // Clear current selection
@@ -266,6 +283,12 @@ class StreamingApp {
             };
             
             this.showTemporaryMessage('Custom video loaded successfully', 'success');
+            
+            // Scroll to video player
+            document.getElementById('videoContainer').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
         } else {
             this.showTemporaryMessage('Failed to load custom video', 'error');
         }
@@ -274,12 +297,12 @@ class StreamingApp {
     }
 
     /**
-     * Select movie from the list
+     * Select movie from the grid
      */
-    async selectMovie(movieElement) {
-        const filename = movieElement.getAttribute('data-filename');
-        const title = movieElement.querySelector('h6')?.textContent || 'Unknown Movie';
-        const description = movieElement.querySelector('small')?.textContent || '';
+    async selectMovie(movieCard) {
+        const filename = movieCard.getAttribute('data-filename');
+        const title = movieCard.querySelector('h6')?.textContent || 'Unknown Movie';
+        const description = movieCard.querySelector('small')?.textContent || '';
 
         if (!filename) {
             this.log('error', 'Movie filename not found');
@@ -288,38 +311,89 @@ class StreamingApp {
 
         // Update UI selection
         this.clearMovieSelection();
-        movieElement.classList.add('active');
+        movieCard.classList.add('active');
+
+        // Construct full URL for Madifa CDN videos
+        let videoUrl = filename;
+        if (!filename.startsWith('http')) {
+            // For Madifa CDN videos, construct the full URL
+            if (filename.includes('vz-685277f9-aa1.b-cdn.net')) {
+                videoUrl = `https://${filename}`;
+            }
+        }
 
         // Load the movie
-        const success = await this.moviePlayer.loadVideo(filename, {
+        const success = await this.moviePlayer.loadVideo(videoUrl, {
             title: title,
             description: description
         });
 
         if (success) {
             this.currentMovie = {
-                filename: filename,
+                filename: videoUrl,
                 title: title,
                 description: description
             };
             
             this.showTemporaryMessage(`Loading: ${title}`, 'info');
+            
+            // Scroll to video player
+            document.getElementById('videoContainer').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
         } else {
-            movieElement.classList.remove('active');
+            movieCard.classList.remove('active');
             this.showTemporaryMessage(`Failed to load: ${title}`, 'error');
         }
 
-        this.log('info', 'Movie selection', { filename, title, success });
+        this.log('info', 'Movie selection', { filename: videoUrl, title, success });
     }
 
     /**
      * Clear movie selection UI
      */
     clearMovieSelection() {
-        const movieItems = document.querySelectorAll('.movie-item');
-        movieItems.forEach(item => {
-            item.classList.remove('active');
+        const movieCards = document.querySelectorAll('.movie-card');
+        movieCards.forEach(card => {
+            card.classList.remove('active');
         });
+    }
+    
+    /**
+     * Setup player controls
+     */
+    setupPlayerControls() {
+        // Volume control
+        const volumeSlider = document.getElementById('volumeSlider');
+        if (volumeSlider && this.moviePlayer) {
+            volumeSlider.addEventListener('input', (e) => {
+                if (this.moviePlayer.video) {
+                    this.moviePlayer.video.volume = e.target.value / 100;
+                }
+            });
+        }
+        
+        // Speed control
+        const speedSelect = document.getElementById('speedSelect');
+        if (speedSelect && this.moviePlayer) {
+            speedSelect.addEventListener('change', (e) => {
+                if (this.moviePlayer.video) {
+                    this.moviePlayer.video.playbackRate = parseFloat(e.target.value);
+                }
+            });
+        }
+        
+        // Sync controls with video
+        if (this.moviePlayer && this.moviePlayer.video) {
+            this.moviePlayer.video.addEventListener('volumechange', () => {
+                if (volumeSlider) {
+                    volumeSlider.value = this.moviePlayer.video.volume * 100;
+                }
+            });
+        }
+        
+        this.log('info', 'Player controls setup completed');
     }
 
     /**
