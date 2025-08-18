@@ -1,8 +1,18 @@
-# Movies Streaming App with Bunny CDN
+# Madifa Streaming App with Bunny CDN
 
 ## Overview
 
-This is a web-based movie streaming application that integrates with Bunny CDN for content delivery. The application provides a custom video player with advanced error handling, debugging capabilities, and real-time monitoring. It's designed as a client-side application using vanilla JavaScript with Bootstrap for UI components and Feather icons for visual elements.
+This is a web-based movie streaming application featuring authentic South African content, integrating with Bunny CDN (vz-685277f9-aa1.b-cdn.net) for content delivery. The application provides a custom video player with advanced error handling, debugging capabilities, and real-time monitoring. It includes both client-side JavaScript components and a Node.js/Express server with PostgreSQL database integration for user authentication and content management.
+
+## Recent Changes (Migration Completed - August 18, 2025)
+
+✓ Successfully migrated from Replit Agent to standard Replit environment
+✓ Installed all Node.js dependencies including Express, TypeScript, Drizzle ORM
+✓ Created and configured PostgreSQL database with users and sessions tables
+✓ Fixed TypeScript/ES module configuration issues
+✓ Updated movie catalog to feature authentic Madifa content from Bunny CDN
+✓ Resolved authentication flow issues causing "Section Error"
+✓ Server running stable on port 5000 with full functionality
 
 ## User Preferences
 
