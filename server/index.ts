@@ -1,6 +1,11 @@
 import express from "express";
 import path from "path";
-import { registerRoutes } from "./routes.js";
+import { fileURLToPath } from 'url';
+import { registerRoutes } from "./routes";
+
+// Handle __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
