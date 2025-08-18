@@ -32,16 +32,16 @@ class BunnyCDN {
         if (storedConfig) {
             try {
                 const config = JSON.parse(storedConfig);
-                this.baseUrl = envBaseUrl || config.baseUrl || '';
-                this.token = envToken || config.token || '';
-                this.zone = envZone || config.zone || '';
+                this.baseUrl = envBaseUrl || config.baseUrl || 'https://vz-685277f9-aa1.b-cdn.net';
+                this.token = envToken || config.token || 'd1db0b8a-70c9-4386-886b-cd38bfc0ccab';
+                this.zone = envZone || config.zone || 'vz-685277f9-aa1';
             } catch (e) {
                 this.log('error', 'Failed to parse stored CDN configuration', e);
             }
         } else {
-            this.baseUrl = envBaseUrl;
-            this.token = envToken;
-            this.zone = envZone;
+            this.baseUrl = envBaseUrl || 'https://vz-685277f9-aa1.b-cdn.net';
+            this.token = envToken || 'd1db0b8a-70c9-4386-886b-cd38bfc0ccab';
+            this.zone = envZone || 'vz-685277f9-aa1';
         }
 
         this.updateConfigurationStatus();
