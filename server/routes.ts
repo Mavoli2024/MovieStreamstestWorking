@@ -29,35 +29,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Movies API route (protected)
   app.get("/api/movies", requireAuth, async (req, res) => {
-    // Return available movies for authenticated users
+    // Return available Madifa movies for authenticated users
     const movies = [
       {
-        id: "big-buck-bunny",
-        title: "Big Buck Bunny",
-        description: "Open source animated short",
-        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        thumbnail: "/api/placeholder/300/200"
+        id: "ubuntu-stories",
+        title: "Ubuntu: Stories of Connection",
+        description: "A powerful exploration of Ubuntu philosophy in modern South Africa",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/ubuntu-short.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Madifa Original",
+        duration: "45 minutes",
+        year: 2024
       },
       {
-        id: "elephants-dream", 
-        title: "Elephants Dream",
-        description: "Creative Commons movie",
-        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-        thumbnail: "/api/placeholder/300/200"
+        id: "township-tales", 
+        title: "Township Tales",
+        description: "Authentic stories from the heart of South African communities",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/township-tales.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Community Stories",
+        duration: "32 minutes",
+        year: 2024
       },
       {
-        id: "sintel",
-        title: "Sintel",
-        description: "Blender Open Movie",
-        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-        thumbnail: "/api/placeholder/300/200"
+        id: "mzansi-dreams",
+        title: "Mzansi Dreams",
+        description: "Youth aspirations and dreams in contemporary South Africa",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/mzansi-dreams.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Youth Aspirations",
+        duration: "28 minutes",
+        year: 2024
       },
       {
-        id: "tears-of-steel",
-        title: "Tears of Steel", 
-        description: "Science fiction short film",
-        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-        thumbnail: "/api/placeholder/300/200"
+        id: "heritage-journey",
+        title: "Heritage Journey", 
+        description: "A cultural documentary exploring South African heritage",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/heritage-journey.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Cultural Documentary",
+        duration: "52 minutes",
+        year: 2024
+      },
+      {
+        id: "love-in-johannesburg",
+        title: "Love in Johannesburg",
+        description: "A romantic drama set against the vibrant backdrop of Johannesburg",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/love-in-johannesburg.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Romance Drama",
+        duration: "68 minutes",
+        year: 2024
+      },
+      {
+        id: "amandla-power",
+        title: "Amandla: The Power Within",
+        description: "An inspirational story of inner strength and community power",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/amandla-power.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Inspirational",
+        duration: "41 minutes",
+        year: 2024
       }
     ];
     
