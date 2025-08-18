@@ -222,8 +222,8 @@ class SimpleAuthSystem {
             heroSection.style.display = 'block';
         }
 
-        // Show limited movies for non-authenticated users
-        this.showLimitedMovies();
+        // Show all movies for non-authenticated users (they just can't play them)
+        this.showAllMoviesWithOverlay();
         
         this.log('info', 'Showing public content');
     }
@@ -381,23 +381,43 @@ class SimpleAuthSystem {
      */
     async loadAuthenticatedMovies() {
         try {
-            const response = await this.apiRequest('/api/movies');
+            const response = await fetch('/api/movies', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' }
+            });
             
             if (response.ok) {
                 const movies = await response.json();
                 this.displayMovies(movies);
                 this.log('info', 'Loaded authenticated movies', { count: movies.length });
-            } else if (response.status === 401) {
-                // User is not authenticated, show limited content
-                this.showLimitedMovies();
             } else {
                 // Show all default movies if API fails
                 this.showAllMovies();
+                this.log('info', 'Using default movie list');
             }
         } catch (error) {
             this.log('error', 'Failed to load authenticated movies', error.message);
             this.showAllMovies();
         }
+    }
+
+    /**
+     * Show all movies with sign-in overlay for non-authenticated users
+     */
+    showAllMoviesWithOverlay() {
+        const movieCards = document.querySelectorAll('.movie-card');
+        
+        movieCards.forEach((card) => {
+            // Show all movies
+            card.style.display = 'block';
+            card.style.opacity = '1';
+            
+            // Add sign-in overlay for click protection
+            this.addSignInOverlay(card);
+        });
+        
+        this.log('info', 'All movies shown with authentication overlay');
     }
 
     /**
