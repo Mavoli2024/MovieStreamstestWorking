@@ -6,6 +6,12 @@ This is a web-based movie streaming application featuring authentic South Africa
 
 ## Recent Changes (Performance Optimization - August 19, 2025)
 
+✓ **LATEST FIXES (August 19, 2025)**:
+   - Fixed missing "dev" script in package.json using npm pkg set command
+   - Resolved port conflict by clearing existing tsx processes
+   - Updated all movie cards to use correct Madifa Bunny CDN URLs instead of Google sample videos
+   - Server now properly runs and shows authentic South African content from vz-685277f9-aa1.b-cdn.net
+
 ✓ **CRITICAL FIXES IMPLEMENTED**:
    - Fixed video playback performance issues with throttled event listeners
    - Added adaptive quality selection based on connection speed testing
