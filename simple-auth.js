@@ -512,15 +512,16 @@ class SimpleAuthSystem {
      * Display movies in the UI
      */
     displayMovies(movies) {
-        const moviesList = document.getElementById('moviesList');
-        if (!moviesList || !movies) return;
+        // Update the main movie gallery instead of moviesList
+        const moviesContainer = document.querySelector('#movie-gallery .row');
+        if (!moviesContainer || !movies) return;
 
         // Clear existing movies
-        moviesList.innerHTML = '';
+        moviesContainer.innerHTML = '';
 
         movies.forEach(movie => {
             const movieCard = this.createMovieCard(movie);
-            moviesList.appendChild(movieCard);
+            moviesContainer.appendChild(movieCard);
             
             // Add auth overlay for non-authenticated users
             if (!this.isAuthenticated) {
@@ -531,9 +532,14 @@ class SimpleAuthSystem {
             }
         });
 
-        // Re-initialize feather icons
+        // Re-initialize feather icons and click handlers
         if (typeof feather !== 'undefined') {
             feather.replace();
+        }
+        
+        // Reinitialize streaming app click handlers
+        if (window.streamingApp) {
+            window.streamingApp.initializeClickHandlers();
         }
         
         this.log('info', 'Movies displayed', { count: movies.length, authenticated: this.isAuthenticated });
@@ -544,22 +550,34 @@ class SimpleAuthSystem {
      */
     createMovieCard(movie) {
         const colDiv = document.createElement('div');
-        colDiv.className = 'col-md-6 col-lg-4';
+        colDiv.className = 'col-md-4 mb-4';
 
         colDiv.innerHTML = `
-            <div class="movie-card" data-filename="${movie.url}">
-                <div class="movie-poster">
-                    <div class="placeholder-poster">
-                        <i data-feather="film" class="poster-icon"></i>
+            <div class="card movie-card h-100" 
+                 data-video-url="${movie.url}" 
+                 data-video-title="${movie.title}"
+                 data-video-guid="${movie.guid}">
+                <img src="${movie.thumbnail}" 
+                     class="card-img-top" 
+                     alt="${movie.title}"
+                     style="height: 200px; object-fit: cover;"
+                     onerror="this.src='https://via.placeholder.com/300x200/1a1a1a/ffffff?text=${encodeURIComponent(movie.title)}'">
+                <div class="card-body">
+                    <h5 class="card-title text-light">${movie.title}</h5>
+                    <p class="card-text text-muted">${movie.description}</p>
+                    <div class="movie-meta">
+                        <small class="text-muted">
+                            <i data-feather="clock"></i> ${movie.duration} | 
+                            <i data-feather="calendar"></i> ${movie.year} |
+                            <i data-feather="tag"></i> ${movie.category}
+                        </small>
                     </div>
-                    <div class="play-overlay">
-                        <i data-feather="play-circle" class="play-icon"></i>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button class="btn btn-primary btn-sm" onclick="playMovie('${movie.url}', '${movie.title}')">
+                            <i data-feather="play"></i> Watch Now
+                        </button>
+                        <small class="text-muted">${movie.views || 0} views</small>
                     </div>
-                    <div class="movie-badge">Free</div>
-                </div>
-                <div class="movie-info">
-                    <h6>${movie.title}</h6>
-                    <small class="text-muted">${movie.description}</small>
                 </div>
             </div>
         `;

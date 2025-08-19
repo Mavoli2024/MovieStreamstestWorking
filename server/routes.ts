@@ -3,22 +3,21 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, requireAuth } from "./auth";
 
-// Bunny CDN Storage API configuration
-const BUNNY_CDN_STORAGE_API = "https://storage.bunnycdn.com";
-const BUNNY_CDN_STORAGE_ZONE = "madifa";
+// Bunny CDN Stream API configuration
+const BUNNY_CDN_STREAM_API = "https://video.bunnycdn.com/library";
+const BUNNY_CDN_VIDEO_LIBRARY_ID = "425043";
 const BUNNY_CDN_BASE_URL = "https://vz-685277f9-aa1.b-cdn.net";
 const BUNNY_CDN_API_KEY = "0f122642-06cc-4dac-b4b0720962c8-49bd-4f49";
 
 async function fetchMoviesFromBunnyCDN(): Promise<any[]> {
   try {
-    // Since we don't have the correct Storage API access, let's use the Pull Zone API instead
-    // This approach uses the CDN API to get zone information and discover content
-    const pullZoneApiUrl = `https://api.bunny.net/pullzone/vz-685277f9-aa1`;
+    // Use Bunny CDN Stream API to get videos from the library
+    const streamApiUrl = `${BUNNY_CDN_STREAM_API}/${BUNNY_CDN_VIDEO_LIBRARY_ID}/videos`;
     
-    console.log("Attempting to fetch from Bunny CDN Pull Zone API...");
+    console.log("Attempting to fetch from Bunny CDN Stream API...");
     
-    // Try Pull Zone API first
-    const response = await fetch(pullZoneApiUrl, {
+    // Fetch videos from Stream API
+    const response = await fetch(streamApiUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -27,36 +26,50 @@ async function fetchMoviesFromBunnyCDN(): Promise<any[]> {
     });
 
     if (response.ok) {
-      const zoneData = await response.json();
-      console.log("Pull Zone data received");
+      const data = await response.json();
+      console.log("Stream API data received:", data);
       
-      // Since we can't directly list files without storage API, 
-      // let's try to discover content by testing known video paths
-      const testPaths = [
-        '/movies/',
-        '/content/',
-        '/videos/',
-        '/'
-      ];
+      // Extract videos from the response
+      const videos = data.items || data || [];
       
-      // For now, return an empty array and let you tell us what files exist
-      console.log("Please provide the actual movie files in your storage");
-      return [];
+      const movies = videos.map((video: any) => {
+        // Create clean title from video title or guid
+        const title = video.title || video.guid || 'Untitled Video';
+        
+        // Use the video GUID for streaming URL
+        const streamUrl = `${BUNNY_CDN_BASE_URL}/${video.guid}/playlist.m3u8`;
+        const mp4Url = `${BUNNY_CDN_BASE_URL}/${video.guid}/play_720p.mp4`;
+        
+        return {
+          id: video.guid,
+          title: title,
+          description: `Authentic South African content - ${title}`,
+          url: mp4Url, // Use MP4 for direct playback
+          streamUrl: streamUrl, // HLS stream URL
+          thumbnail: video.thumbnailFileName ? 
+            `${BUNNY_CDN_BASE_URL}/${video.guid}/${video.thumbnailFileName}` : 
+            `${BUNNY_CDN_BASE_URL}/${video.guid}/thumbnail.jpg`,
+          category: video.category || "Madifa Original",
+          duration: video.length ? `${Math.round(video.length / 60)} minutes` : "Feature Length",
+          year: new Date(video.dateUploaded || Date.now()).getFullYear(),
+          guid: video.guid,
+          status: video.status,
+          views: video.views || 0,
+          size: video.storageSize || 0
+        };
+      });
+
+      console.log(`Fetched ${movies.length} videos from Bunny CDN Stream library`);
+      return movies;
       
     } else {
-      console.error("Failed to fetch from Pull Zone API:", response.status, response.statusText);
-      
-      // If API access fails, ask user for actual file list
-      console.log("Unable to access Bunny CDN APIs. Need actual file list from user.");
-      return [];
+      console.error("Failed to fetch from Stream API:", response.status, response.statusText);
+      throw new Error(`Stream API error: ${response.status} ${response.statusText}`);
     }
     
   } catch (error) {
-    console.error("Error fetching movies from Bunny CDN:", error);
-    
-    // Return empty array so user can provide actual files
-    console.log("Please provide your actual movie files list");
-    return [];
+    console.error("Error fetching videos from Bunny CDN Stream:", error);
+    throw error;
   }
 }
 
