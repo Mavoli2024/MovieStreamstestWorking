@@ -148,7 +148,11 @@
   }
 
   .madifa-button-primary {
-    @apply bg-[var(--madifa-orange)] hover:bg-[var(--madifa-orange)]/80 text-white font-semibold;
+    @apply bg-madifa-orange text-white font-semibold transition-all duration-300;
+  }
+  
+  .madifa-button-primary:hover {
+    background-color: hsl(24, 95%, 45%);
   }
 
   .madifa-button-secondary {
@@ -156,7 +160,9 @@
   }
 
   .madifa-card {
-    @apply bg-[var(--madifa-dark)]/80 backdrop-blur-sm border border-gray-800;
+    background-color: rgba(31, 35, 55, 0.8);
+    backdrop-filter: blur(4px);
+    @apply border border-gray-800;
   }
 }
 
