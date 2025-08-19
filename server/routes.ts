@@ -1,173 +1,113 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMovieSchema, insertPerformanceMetricsSchema, insertUserFeedbackSchema, insertWatchHistorySchema } from "@shared/schema";
-import { z } from "zod";
+import { setupAuth, requireAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Movies endpoints
-  app.get("/api/movies", async (req, res) => {
-    try {
-      const movies = await storage.getAllMovies();
-      res.json(movies);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch movies" });
-    }
-  });
+  // Setup authentication middleware
+  setupAuth(app);
 
-  app.get("/api/movies/trending", async (req, res) => {
+  // Auth routes
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const movies = await storage.getTrendingMovies();
-      res.json(movies);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch trending movies" });
-    }
-  });
-
-  app.get("/api/movies/originals", async (req, res) => {
-    try {
-      const movies = await storage.getOriginalMovies();
-      res.json(movies);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch original movies" });
-    }
-  });
-
-  app.get("/api/movies/type/:type", async (req, res) => {
-    try {
-      const { type } = req.params;
-      const movies = await storage.getMoviesByType(type);
-      res.json(movies);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch movies by type" });
-    }
-  });
-
-  app.get("/api/movies/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const movie = await storage.getMovie(id);
-      if (!movie) {
-        return res.status(404).json({ error: "Movie not found" });
+      // Check if user is authenticated
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
       }
-      res.json(movie);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch movie" });
-    }
-  });
-
-  app.post("/api/movies", async (req, res) => {
-    try {
-      const movieData = insertMovieSchema.parse(req.body);
-      const movie = await storage.createMovie(movieData);
-      res.status(201).json(movie);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid movie data", details: error.errors });
+      
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
-      res.status(500).json({ error: "Failed to create movie" });
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
-  // Watch history endpoints
-  app.get("/api/watch-history/:userId", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const history = await storage.getUserWatchHistory(userId);
-      res.json(history);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch watch history" });
-    }
-  });
-
-  app.post("/api/watch-history", async (req, res) => {
-    try {
-      const watchData = insertWatchHistorySchema.parse(req.body);
-      const history = await storage.updateWatchProgress(watchData);
-      res.json(history);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid watch history data", details: error.errors });
+  // Movies API route (protected)
+  app.get("/api/movies", requireAuth, async (req, res) => {
+    // Return available Madifa movies for authenticated users
+    const movies = [
+      {
+        id: "ubuntu-stories",
+        title: "Ubuntu: Stories of Connection",
+        description: "A powerful exploration of Ubuntu philosophy in modern South Africa",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/ubuntu-short.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Madifa Original",
+        duration: "45 minutes",
+        year: 2024
+      },
+      {
+        id: "township-tales", 
+        title: "Township Tales",
+        description: "Authentic stories from the heart of South African communities",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/township-tales.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Community Stories",
+        duration: "32 minutes",
+        year: 2024
+      },
+      {
+        id: "mzansi-dreams",
+        title: "Mzansi Dreams",
+        description: "Youth aspirations and dreams in contemporary South Africa",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/mzansi-dreams.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Youth Aspirations",
+        duration: "28 minutes",
+        year: 2024
+      },
+      {
+        id: "heritage-journey",
+        title: "Heritage Journey", 
+        description: "A cultural documentary exploring South African heritage",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/heritage-journey.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Cultural Documentary",
+        duration: "52 minutes",
+        year: 2024
+      },
+      {
+        id: "love-in-johannesburg",
+        title: "Love in Johannesburg",
+        description: "A romantic drama set against the vibrant backdrop of Johannesburg",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/love-in-johannesburg.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Romance Drama",
+        duration: "68 minutes",
+        year: 2024
+      },
+      {
+        id: "amandla-power",
+        title: "Amandla: The Power Within",
+        description: "An inspirational story of inner strength and community power",
+        url: "https://vz-685277f9-aa1.b-cdn.net/movies/amandla-power.mp4",
+        thumbnail: "/api/placeholder/300/200",
+        category: "Inspirational",
+        duration: "41 minutes",
+        year: 2024
       }
-      res.status(500).json({ error: "Failed to update watch history" });
-    }
+    ];
+    
+    res.json(movies);
   });
 
-  // Performance metrics endpoints
-  app.post("/api/performance-metrics", async (req, res) => {
-    try {
-      const metricsData = insertPerformanceMetricsSchema.parse(req.body);
-      const metrics = await storage.recordPerformanceMetrics(metricsData);
-      res.json(metrics);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid metrics data", details: error.errors });
-      }
-      res.status(500).json({ error: "Failed to record metrics" });
-    }
+  // Auth page route - handle both /auth and /auth.html
+  app.get('/auth', (req, res) => {
+    res.sendFile('auth.html', { root: process.cwd() });
   });
 
-  app.get("/api/performance-metrics/average", async (req, res) => {
-    try {
-      const metrics = await storage.getAveragePerformanceMetrics();
-      res.json(metrics);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch performance metrics" });
-    }
-  });
-
-  app.get("/api/performance-metrics/:userId", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const metrics = await storage.getUserPerformanceMetrics(userId);
-      res.json(metrics);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch user metrics" });
-    }
-  });
-
-  // User feedback endpoints
-  app.post("/api/feedback", async (req, res) => {
-    try {
-      const feedbackData = insertUserFeedbackSchema.parse(req.body);
-      const feedback = await storage.submitFeedback(feedbackData);
-      res.json(feedback);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid feedback data", details: error.errors });
-      }
-      res.status(500).json({ error: "Failed to submit feedback" });
-    }
-  });
-
-  app.get("/api/feedback", async (req, res) => {
-    try {
-      const feedback = await storage.getFeedback();
-      res.json(feedback);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch feedback" });
-    }
-  });
-
-  app.patch("/api/feedback/:id/resolve", async (req, res) => {
-    try {
-      const { id } = req.params;
-      await storage.resolveFeedback(id);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to resolve feedback" });
-    }
-  });
-
-  // Connection speed test endpoint
-  app.get("/api/speed-test", (req, res) => {
-    // Return a small test payload with timestamp for connection speed calculation
-    const testData = {
-      timestamp: Date.now(),
-      size: 1024, // 1KB test data
-      data: "a".repeat(1024)
-    };
-    res.json(testData);
+  // Public routes
+  app.get('/api/status', (req, res) => {
+    res.json({ 
+      status: 'ok', 
+      authenticated: !!(req as any).isAuthenticated && (req as any).isAuthenticated(),
+      timestamp: new Date().toISOString()
+    });
   });
 
   const httpServer = createServer(app);

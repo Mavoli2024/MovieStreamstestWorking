@@ -1,79 +1,83 @@
-# Overview
+# Madifa Streaming App with Bunny CDN
 
-This is a modern streaming media platform called "Madifa" built as a full-stack web application. The platform focuses on delivering video content "for the world with Africans at heart" and provides Netflix-like functionality including movie streaming, user watch history, performance monitoring, and user feedback systems. The application is designed for scalable video delivery with adaptive streaming capabilities and comprehensive analytics.
+## Overview
 
-# User Preferences
+This is a web-based movie streaming application featuring authentic South African content, integrating with Bunny CDN (vz-685277f9-aa1.b-cdn.net) for content delivery. The application provides a custom video player with advanced error handling, debugging capabilities, and real-time monitoring. It includes both client-side JavaScript components and a Node.js/Express server with PostgreSQL database integration for user authentication and content management.
+
+## Recent Changes (Performance Optimization - August 19, 2025)
+
+✓ **CRITICAL FIXES IMPLEMENTED**:
+   - Fixed video playback performance issues with throttled event listeners
+   - Added adaptive quality selection based on connection speed testing
+   - Implemented CDN fallback URLs for improved reliability
+   - Enhanced error recovery with smart retry mechanisms
+   - Optimized loading performance with script deferring and DNS prefetching
+
+✓ **Previous Migration (August 18, 2025)**:
+   - Successfully migrated from Replit Agent to standard Replit environment
+   - Installed all Node.js dependencies including Express, TypeScript, Drizzle ORM
+   - Created and configured PostgreSQL database with users and sessions tables
+   - Fixed TypeScript/ES module configuration issues
+   - Updated movie catalog to feature authentic Madifa content from Bunny CDN
+   - Resolved authentication flow issues causing "Section Error"
+
+## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
-# System Architecture
+## System Architecture
 
-## Frontend Architecture
-- **Framework**: React 18 with TypeScript using Vite as the build tool
-- **Routing**: Wouter for client-side routing (lightweight alternative to React Router)
-- **UI Framework**: Shadcn/ui components built on top of Radix UI primitives
-- **Styling**: Tailwind CSS with custom design system variables for the Madifa brand
-- **State Management**: TanStack Query (React Query) for server state management
-- **Form Handling**: React Hook Form with Zod validation
+### Frontend Architecture
+The application follows a modular JavaScript architecture with separate classes for distinct responsibilities:
+- **VideoPlayer class**: Handles video playback, streaming controls, and error management
+- **BunnyCDN class**: Manages CDN integration, URL construction, and authentication
+- **DebugPanel class**: Provides real-time debugging and monitoring capabilities
+- **StreamingApp class**: Main orchestrator that coordinates all components
 
-## Backend Architecture
-- **Runtime**: Node.js with Express.js framework
-- **Language**: TypeScript with ESM modules
-- **API Design**: RESTful API with structured route handling
-- **Database ORM**: Drizzle ORM for type-safe database operations
-- **Validation**: Zod schemas for input validation and type safety
-- **Development**: Hot reload with Vite integration in development mode
+### Configuration Management
+The application uses a flexible configuration system that prioritizes environment variables over localStorage:
+- Environment variables for production deployment (BUNNY_CDN_BASE_URL, BUNNY_CDN_TOKEN, BUNNY_CDN_ZONE)
+- localStorage fallback for client-side configuration persistence
+- Runtime configuration updates through the debug panel
 
-## Database Design
-- **Database**: PostgreSQL (configured for Neon serverless)
-- **Schema Management**: Drizzle Kit for migrations and schema management
-- **Tables**:
-  - `users`: User authentication and subscription management
-  - `movies`: Video content metadata with quality URLs and streaming information
-  - `watchHistory`: User viewing progress and completion tracking
-  - `performanceMetrics`: Real-time streaming quality and performance data
-  - `userFeedback`: User issue reporting and feedback system
+### Error Handling and Debugging
+Comprehensive error management system with multiple layers:
+- Video player error recovery with automatic retry mechanism (max 3 retries)
+- Real-time debug panel showing CDN status, player state, and network conditions
+- Structured logging system with different severity levels
+- Visual error overlays with user-friendly error messages
 
-## Video Streaming Features
-- **Adaptive Streaming**: Multiple quality URLs (360p, 480p, 720p, 1080p) with automatic quality adjustment
-- **Performance Monitoring**: Real-time tracking of buffer time, error rates, connection speed, and CDN latency
-- **Content Organization**: Support for movies, series, documentaries, music, and theatre content types
-- **Original Content**: Special handling and badging for platform-exclusive content
+### Video Streaming Architecture
+Custom video player implementation designed for streaming:
+- Cross-origin resource sharing (CORS) support for CDN content
+- Adaptive loading states with visual feedback
+- Playsinline attributes for mobile compatibility
+- Metadata preloading for faster startup times
 
-## Development and Deployment
-- **Build System**: Vite for frontend bundling, esbuild for backend compilation
-- **Type Safety**: Shared TypeScript types between frontend and backend
-- **Path Aliases**: Organized import structure with @/ for client code and @shared for common types
-- **Environment**: Replit-optimized with development tooling and error handling
+### User Interface Design
+Bootstrap-based responsive design with:
+- Dark theme header with application branding
+- Collapsible debug panel for development and troubleshooting
+- Loading and error overlays for better user experience
+- Feather icons for consistent iconography
 
-# External Dependencies
+## External Dependencies
 
-## Core Framework Dependencies
-- **@tanstack/react-query**: Server state management and caching
-- **wouter**: Lightweight client-side routing
-- **drizzle-orm** & **drizzle-kit**: Type-safe database ORM and migration tools
-- **@neondatabase/serverless**: Serverless PostgreSQL connection with WebSocket support
+### CDN Services
+- **Bunny CDN**: Primary content delivery network for video streaming
+  - Requires base URL, authentication token, and zone configuration
+  - Supports pull zone architecture for content distribution
 
-## UI and Styling
-- **@radix-ui/***: Comprehensive set of unstyled UI primitives (accordion, dialog, dropdown, etc.)
-- **tailwindcss**: Utility-first CSS framework
-- **class-variance-authority**: Type-safe component variants
-- **clsx** & **tailwind-merge**: Conditional CSS class utilities
+### Frontend Libraries
+- **Bootstrap 5.3.0**: UI framework for responsive design and components
+- **Feather Icons**: Lightweight icon library for user interface elements
 
-## Form and Validation
-- **react-hook-form**: Performant form handling
-- **@hookform/resolvers**: Form validation resolver integration
-- **zod**: Schema validation and TypeScript inference
-- **drizzle-zod**: Integration between Drizzle schemas and Zod validation
+### Browser APIs
+- **HTML5 Video API**: Core video playback functionality
+- **localStorage API**: Client-side configuration persistence
+- **DOM API**: Dynamic content manipulation and event handling
 
-## Development Tools
-- **vite**: Fast build tool and development server
-- **@replit/vite-plugin-runtime-error-modal**: Enhanced error handling for Replit
-- **tsx**: TypeScript execution for development scripts
-- **@types/node**: Node.js TypeScript definitions
-
-## Additional Features
-- **date-fns**: Date manipulation and formatting
-- **embla-carousel-react**: Touch-friendly carousel/slider component
-- **cmdk**: Command palette and search functionality
-- **lucide-react**: Feather-inspired icon library
+### Development Tools
+- Environment variable support for configuration management
+- Console logging for debugging and monitoring
+- Real-time status monitoring for CDN and player health
