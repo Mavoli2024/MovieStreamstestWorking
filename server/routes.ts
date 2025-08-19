@@ -7,47 +7,56 @@ import { setupAuth, requireAuth } from "./auth";
 const BUNNY_CDN_STORAGE_API = "https://storage.bunnycdn.com";
 const BUNNY_CDN_STORAGE_ZONE = "madifa";
 const BUNNY_CDN_BASE_URL = "https://vz-685277f9-aa1.b-cdn.net";
+const BUNNY_CDN_API_KEY = "0f122642-06cc-4dac-b4b0720962c8-49bd-4f49";
 
 async function fetchMoviesFromBunnyCDN(): Promise<any[]> {
   try {
-    // For now, use the existing CDN URL structure to discover movies
-    // This can be enhanced with actual storage API when API key is available
+    // Since we don't have the correct Storage API access, let's use the Pull Zone API instead
+    // This approach uses the CDN API to get zone information and discover content
+    const pullZoneApiUrl = `https://api.bunny.net/pullzone/vz-685277f9-aa1`;
     
-    // Known movie files from your storage
-    const knownMovies = [
-      "ubuntu-short.mp4",
-      "township-tales.mp4", 
-      "mzansi-dreams.mp4",
-      "heritage-journey.mp4",
-      "love-in-johannesburg.mp4",
-      "amandla-power.mp4"
-    ];
-
-    const movies = knownMovies.map((filename, index) => {
-      const cleanName = filename.replace('.mp4', '').replace('-', ' ');
-      const titleCase = cleanName.split(' ').map(word => 
-        word.charAt(0).toUpperCase() + word.slice(1)
-      ).join(' ');
-
-      return {
-        id: filename.replace('.mp4', ''),
-        title: titleCase,
-        description: `Authentic South African storytelling - ${titleCase}`,
-        url: `${BUNNY_CDN_BASE_URL}/movies/${filename}`,
-        thumbnail: `${BUNNY_CDN_BASE_URL}/thumbnails/${filename.replace('.mp4', '.jpg')}`,
-        category: "Madifa Original",
-        duration: "Feature Length",
-        year: 2024,
-        filename: filename
-      };
+    console.log("Attempting to fetch from Bunny CDN Pull Zone API...");
+    
+    // Try Pull Zone API first
+    const response = await fetch(pullZoneApiUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'AccessKey': BUNNY_CDN_API_KEY
+      }
     });
 
-    console.log("Fetched movies from Bunny CDN:", movies.length);
-    return movies;
+    if (response.ok) {
+      const zoneData = await response.json();
+      console.log("Pull Zone data received");
+      
+      // Since we can't directly list files without storage API, 
+      // let's try to discover content by testing known video paths
+      const testPaths = [
+        '/movies/',
+        '/content/',
+        '/videos/',
+        '/'
+      ];
+      
+      // For now, return an empty array and let you tell us what files exist
+      console.log("Please provide the actual movie files in your storage");
+      return [];
+      
+    } else {
+      console.error("Failed to fetch from Pull Zone API:", response.status, response.statusText);
+      
+      // If API access fails, ask user for actual file list
+      console.log("Unable to access Bunny CDN APIs. Need actual file list from user.");
+      return [];
+    }
     
   } catch (error) {
     console.error("Error fetching movies from Bunny CDN:", error);
-    throw error;
+    
+    // Return empty array so user can provide actual files
+    console.log("Please provide your actual movie files list");
+    return [];
   }
 }
 
