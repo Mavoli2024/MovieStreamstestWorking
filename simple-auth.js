@@ -512,11 +512,11 @@ class SimpleAuthSystem {
      * Display movies in the UI
      */
     displayMovies(movies) {
-        // Update the main movie gallery instead of moviesList
-        const moviesContainer = document.querySelector('#movie-gallery .row');
+        // Update the moviesList container instead 
+        const moviesContainer = document.querySelector('#moviesList');
         if (!moviesContainer || !movies) return;
 
-        // Clear existing movies
+        // Clear existing movies including loading spinner
         moviesContainer.innerHTML = '';
 
         movies.forEach(movie => {
