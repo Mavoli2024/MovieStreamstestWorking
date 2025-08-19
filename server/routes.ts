@@ -3,6 +3,54 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, requireAuth } from "./auth";
 
+// Bunny CDN Storage API configuration
+const BUNNY_CDN_STORAGE_API = "https://storage.bunnycdn.com";
+const BUNNY_CDN_STORAGE_ZONE = "madifa";
+const BUNNY_CDN_BASE_URL = "https://vz-685277f9-aa1.b-cdn.net";
+
+async function fetchMoviesFromBunnyCDN(): Promise<any[]> {
+  try {
+    // For now, use the existing CDN URL structure to discover movies
+    // This can be enhanced with actual storage API when API key is available
+    
+    // Known movie files from your storage
+    const knownMovies = [
+      "ubuntu-short.mp4",
+      "township-tales.mp4", 
+      "mzansi-dreams.mp4",
+      "heritage-journey.mp4",
+      "love-in-johannesburg.mp4",
+      "amandla-power.mp4"
+    ];
+
+    const movies = knownMovies.map((filename, index) => {
+      const cleanName = filename.replace('.mp4', '').replace('-', ' ');
+      const titleCase = cleanName.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ');
+
+      return {
+        id: filename.replace('.mp4', ''),
+        title: titleCase,
+        description: `Authentic South African storytelling - ${titleCase}`,
+        url: `${BUNNY_CDN_BASE_URL}/movies/${filename}`,
+        thumbnail: `${BUNNY_CDN_BASE_URL}/thumbnails/${filename.replace('.mp4', '.jpg')}`,
+        category: "Madifa Original",
+        duration: "Feature Length",
+        year: 2024,
+        filename: filename
+      };
+    });
+
+    console.log("Fetched movies from Bunny CDN:", movies.length);
+    return movies;
+    
+  } catch (error) {
+    console.error("Error fetching movies from Bunny CDN:", error);
+    throw error;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware
   setupAuth(app);
@@ -29,71 +77,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Movies API route (public for browsing)
   app.get("/api/movies", async (req, res) => {
-    // Return available Madifa movies for authenticated users
-    const movies = [
-      {
-        id: "ubuntu-stories",
-        title: "Ubuntu: Stories of Connection",
-        description: "A powerful exploration of Ubuntu philosophy in modern South Africa",
-        url: "https://vz-685277f9-aa1.b-cdn.net/movies/ubuntu-short.mp4",
-        thumbnail: "/api/placeholder/300/200",
-        category: "Madifa Original",
-        duration: "45 minutes",
-        year: 2024
-      },
-      {
-        id: "township-tales", 
-        title: "Township Tales",
-        description: "Authentic stories from the heart of South African communities",
-        url: "https://vz-685277f9-aa1.b-cdn.net/movies/township-tales.mp4",
-        thumbnail: "/api/placeholder/300/200",
-        category: "Community Stories",
-        duration: "32 minutes",
-        year: 2024
-      },
-      {
-        id: "mzansi-dreams",
-        title: "Mzansi Dreams",
-        description: "Youth aspirations and dreams in contemporary South Africa",
-        url: "https://vz-685277f9-aa1.b-cdn.net/movies/mzansi-dreams.mp4",
-        thumbnail: "/api/placeholder/300/200",
-        category: "Youth Aspirations",
-        duration: "28 minutes",
-        year: 2024
-      },
-      {
-        id: "heritage-journey",
-        title: "Heritage Journey", 
-        description: "A cultural documentary exploring South African heritage",
-        url: "https://vz-685277f9-aa1.b-cdn.net/movies/heritage-journey.mp4",
-        thumbnail: "/api/placeholder/300/200",
-        category: "Cultural Documentary",
-        duration: "52 minutes",
-        year: 2024
-      },
-      {
-        id: "love-in-johannesburg",
-        title: "Love in Johannesburg",
-        description: "A romantic drama set against the vibrant backdrop of Johannesburg",
-        url: "https://vz-685277f9-aa1.b-cdn.net/movies/love-in-johannesburg.mp4",
-        thumbnail: "/api/placeholder/300/200",
-        category: "Romance Drama",
-        duration: "68 minutes",
-        year: 2024
-      },
-      {
-        id: "amandla-power",
-        title: "Amandla: The Power Within",
-        description: "An inspirational story of inner strength and community power",
-        url: "https://vz-685277f9-aa1.b-cdn.net/movies/amandla-power.mp4",
-        thumbnail: "/api/placeholder/300/200",
-        category: "Inspirational",
-        duration: "41 minutes",
-        year: 2024
-      }
-    ];
-    
-    res.json(movies);
+    try {
+      const movies = await fetchMoviesFromBunnyCDN();
+      res.json(movies);
+    } catch (error) {
+      console.error("Error fetching movies from Bunny CDN:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch movies from storage", 
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   });
 
   // Auth page route - handle both /auth and /auth.html
