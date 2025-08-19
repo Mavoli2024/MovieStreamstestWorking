@@ -139,14 +139,25 @@ class SimpleAuthSystem {
     /**
      * Update UI based on authentication state
      */
-    updateUI() {
+    async updateUI() {
         // Update sign-in buttons
         this.updateSignInButtons();
         
+        // Always try to load movies from API first
+        const movies = await this.loadMovies();
+        
         if (!this.isAuthenticated) {
             this.showPublicContent();
+            // If movies weren't loaded from API, make sure all hardcoded movies show the overlay
+            if (!movies) {
+                this.showAllMoviesWithOverlay();
+            }
         } else {
             this.showAuthenticatedContent();
+            // Load authenticated movies if not already loaded from API
+            if (!movies) {
+                this.loadAuthenticatedMovies();
+            }
         }
     }
 
@@ -221,9 +232,6 @@ class SimpleAuthSystem {
         if (heroSection) {
             heroSection.style.display = 'block';
         }
-
-        // Show all movies for non-authenticated users (they just can't play them)
-        this.showAllMoviesWithOverlay();
         
         this.log('info', 'Showing public content');
     }
@@ -480,16 +488,18 @@ class SimpleAuthSystem {
      */
     async loadMovies() {
         try {
-            const response = await this.apiRequest('/api/movies');
+            const response = await fetch('/api/movies', {
+                method: 'GET',
+                credentials: 'same-origin'
+            });
             
             if (response.ok) {
                 const movies = await response.json();
                 this.displayMovies(movies);
-                this.log('info', 'Loaded movies', { count: movies.length });
+                this.log('info', 'Loaded movies from API', { count: movies.length });
                 return movies;
             } else {
-                // If movies API requires auth, just show the hardcoded ones
-                this.log('info', 'Movies API not available, using default movies');
+                this.log('info', 'Movies API not available, response:', response.status);
                 return null;
             }
         } catch (error) {
@@ -511,12 +521,22 @@ class SimpleAuthSystem {
         movies.forEach(movie => {
             const movieCard = this.createMovieCard(movie);
             moviesList.appendChild(movieCard);
+            
+            // Add auth overlay for non-authenticated users
+            if (!this.isAuthenticated) {
+                const cardElement = movieCard.querySelector('.movie-card');
+                if (cardElement) {
+                    this.addSignInOverlay(cardElement);
+                }
+            }
         });
 
         // Re-initialize feather icons
         if (typeof feather !== 'undefined') {
             feather.replace();
         }
+        
+        this.log('info', 'Movies displayed', { count: movies.length, authenticated: this.isAuthenticated });
     }
 
     /**

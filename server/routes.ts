@@ -27,8 +27,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Movies API route (protected)
-  app.get("/api/movies", requireAuth, async (req, res) => {
+  // Movies API route (public for browsing)
+  app.get("/api/movies", async (req, res) => {
     // Return available Madifa movies for authenticated users
     const movies = [
       {
